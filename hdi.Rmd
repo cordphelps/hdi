@@ -1,0 +1,192 @@
+---
+title: "binomial crab spiders"
+output: 
+ github_document: default
+ 
+always_allow_html: true
+---
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, results='hide')
+
+# https://yihui.org/knitr/options/
+
+# echo: (TRUE; logical or numeric) Whether to display the source code
+# results: ('markup'; character) Controls how to display the text results.
+# warning: (TRUE; logical) Whether to preserve warnings
+# error: (TRUE; logical) Whether to preserve errors
+# include: (TRUE; logical) Whether to include the chunk output in the output document.
+# 
+```
+
+```{r localCode, echo=FALSE, include=FALSE}
+
+
+
+output.path <- "/Users/rcphelps/code/thesis/hdi/output"
+
+setwd("/Users/rcphelps/code/thesis/hdi")
+
+library(tidyverse)
+library(dplyr)
+
+
+
+```
+
+
+
+```{r makeTibbles, echo=FALSE, include=TRUE, results='asis', message=F, warning=T}
+
+
+# "weeks 23-25",  "weeks 26-31", "weeks 32-34"
+#source.url <- c("https://raw.githubusercontent.com/cordphelps/ampelos/master/data/bugs.csv")
+
+source.url <- c("./data/bugs.csv")
+
+# get a lot of insect observations
+bugs.tibl <- dplyr::as_tibble(read.csv(source.url, header=TRUE, row.names=NULL))
+
+# focus on crab spiders; reduce positive counts to '1'
+binomial.spiders.pm.control.p1.tbl <- bugs.tibl %>% 
+  dplyr::filter(time == 'pm', transect=='control', week < 26) %>%
+  dplyr::select(Thomisidae..crab.spider.) %>% 
+  dplyr::mutate(Thomisidae..crab.spider. = replace(Thomisidae..crab.spider., Thomisidae..crab.spider. > 0, 1))
+
+binomial.spiders.pm.control.p1.mean <- mean(binomial.spiders.pm.control.p1.tbl$Thomisidae..crab.spider.)
+
+binomial.spiders.pm.SNH.p1.tbl <- bugs.tibl %>% 
+  dplyr::filter(time == 'pm', transect=='oakMargin', week < 26) %>%
+  dplyr::select(Thomisidae..crab.spider.) %>% 
+  dplyr::mutate(Thomisidae..crab.spider. = replace(Thomisidae..crab.spider., Thomisidae..crab.spider. > 0, 1))
+
+binomial.spiders.pm.SNH.p1.mean <- mean(binomial.spiders.pm.SNH.p1.tbl$Thomisidae..crab.spider.)
+
+```
+
+
+```{r binomial, echo=FALSE, include=TRUE, results='asis', message=F, warning=T, out.width=c('50%', '50%'), fig.show='hold' }
+
+# Compute likelihood function from 1’s and 0’s
+# https://bookdown.org/content/3686/inferring-a-binomial-probability-via-exact-mathematical-analysis.html#the-likelihood-function-the-bernoulli-distribution
+# > bernoulli_likelihood(.25, c(0,1,0,1,0,1,0,0,1,1,1,0,0,0,0))
+# 1] 1.833122e-05
+# > 
+
+#=============================================================
+source('/Users/rcphelps/code/thesis/hdi/code/kruschke.R')
+
+#=============================================================
+# specify a prior
+# https://bookdown.org/content/3686/inferring-a-binomial-probability-via-exact-mathematical-analysis.html#specifying-a-beta-prior.
+
+# separate a series of observations into 10 series of increasing length
+chop.control.lst <- chopObservations(sourceData = binomial.spiders.pm.control.p1.tbl$Thomisidae..crab.spider., chopFactor = 27)
+
+chop.SNH.lst <- chopObservations(sourceData = binomial.spiders.pm.SNH.p1.tbl$Thomisidae..crab.spider., chopFactor = 27)
+
+#=============================================================
+# build prior, likelihood, and posterior
+
+# Determining the Effective Sample Size of a Parametric Prior
+# # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3081791/
+# effective sample size (ESS) = a + b = 'kappa'
+
+sampledPrior.control.tbl <- buildRandomPriorData(
+        sourceVector = chop.control.lst[[10]], returnSampledRows = 31)
+
+sampledPrior.SNH.tbl <- buildRandomPriorData(
+        sourceVector = chop.SNH.lst[[10]], returnSampledRows = 31)
+
+
+for (i in 1:length(chop.SNH.lst)) {
+  
+  prior.lst <- list(sampledPrior.control.tbl$sampledData, sampledPrior.SNH.tbl$sampledData)
+  trial.lst <- list(chop.control.lst[[i]], chop.SNH.lst[[i]])
+  label.lst <- list("control", "SNH")
+  
+  rtn <- ggPair(prior = prior.lst, trial = trial.lst, labelText = label.lst)
+  
+  print(rtn[[1]])
+  print(rtn[[2]])
+
+}
+
+
+```
+
+```{r observations, echo=FALSE, include=TRUE, results='asis', message=F, warning=T}
+
+
+chop.control.lst <- chopObservations(sourceData = binomial.spiders.pm.control.p1.tbl$Thomisidae..crab.spider., chopFactor = 3)
+
+chop.SNH.lst <- chopObservations(sourceData = binomial.spiders.pm.SNH.p1.tbl$Thomisidae..crab.spider., chopFactor = 3)
+
+sampledPrior.control.tbl <- buildRandomPriorData(
+        sourceVector = chop.control.lst[[90]], returnSampledRows = 31)
+
+sampledPrior.SNH.tbl <- buildRandomPriorData(
+        sourceVector = chop.SNH.lst[[90]], returnSampledRows = 31)
+
+data.tbl <- tibble(observations = seq(from = 3, to = 270, by=3)) %>%
+
+								  add_column(modeControlPrior = 0) %>% 
+                  add_column(modeSNHPrior = 0)  %>%
+								  add_column(modeControlPost = 0) %>% 
+                  add_column(modeSNHPost = 0)  
+
+for (i in 1:length(chop.SNH.lst)) {
+  
+  prior.lst <- list(sampledPrior.control.tbl$sampledData, sampledPrior.SNH.tbl$sampledData)
+  trial.lst <- list(chop.control.lst[[i]], chop.SNH.lst[[i]])
+  label.lst <- list("control", "SNH")
+  
+  data.tbl <- findMode(tibble = data.tbl, 
+                       prior = prior.lst, 
+                       trial = trial.lst, 
+                       labelText = label.lst,
+                       index = i)
+
+}
+
+  # color pallet reference : https://www.garrickadenbuie.com/blog/custom-discrete-color-scales-for-ggplot2/ 
+
+	gg <- ggplot(data=data.tbl, aes(x = observations)) +
+  
+  			geom_ribbon(aes(ymin = 0, ymax = as.numeric(modeControlPost)), fill = '#d1495d', alpha=0.6) +
+
+  			geom_ribbon(aes(ymin = 0, ymax = as.numeric(modeSNHPost)), fill = '#66a182', alpha=0.8) +
+	  
+	      #geom_line(aes(observations, modeControlPrior)) +
+	      #geom_line(aes(observations, modeSNHPrior)) +
+
+  			theme_bw() +
+
+  			scale_x_continuous(limits=c(0, 270), breaks=c(seq(from=0, to=270, by=27))) +
+
+  			# ylim(0, 15) +
+
+  			labs(	x = "number of trial observations",
+         		 	y = paste( " 'mode' (binomial parameter ", expression(theta), ")", sep=""), 
+ 					title = paste("variation in beta distribution posterior mode", 
+ 					              " as trial observations\nincrease\n",  
+ 								        "\ncontrol (red-ish) and SNH (green-ish) trials", 
+ 								        sep=""))
+	
+print(gg)
+
+fileName <- "ggsave.observations.pdf"
+fullPath <- paste(output.path, "/", fileName, sep="")
+
+#if (file.exists(fullPath)) { file.remove(fullPath) }
+
+ggsave(fileName, plot = gg, device = NULL, path = output.path,
+       scale = 1, width = 6, height = NA, dpi = 300, limitsize = TRUE,
+       units = "in")
+
+
+```
+

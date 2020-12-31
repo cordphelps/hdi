@@ -1,0 +1,6 @@
+binomial crab spiders
+================
+
+<img src="hdi_files/figure-gfm/binomial-1.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-2.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-3.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-4.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-5.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-6.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-7.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-8.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-9.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-10.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-11.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-12.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-13.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-14.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-15.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-16.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-17.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-18.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-19.png" width="50%" /><img src="hdi_files/figure-gfm/binomial-20.png" width="50%" />
+
+![](hdi_files/figure-gfm/observations-1.png)<!-- -->
