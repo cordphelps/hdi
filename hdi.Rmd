@@ -6,6 +6,7 @@ output:
 always_allow_html: true
 ---
 
+**(a) the broader context:** I have two trials ('control' and 'SNH') each of which has 270 spider count observations ( mostly 0's, some small counts (less than 5) ). 
 
 
 
@@ -66,6 +67,84 @@ binomial.spiders.pm.SNH.p1.tbl <- bugs.tibl %>%
 binomial.spiders.pm.SNH.p1.mean <- mean(binomial.spiders.pm.SNH.p1.tbl$Thomisidae..crab.spider.)
 
 ```
+
+
+```{r raw, echo=FALSE, include=TRUE, results='asis', message=F, warning=T, out.width=c('50%', '50%'), fig.show='hold' }
+
+raw.spiders.pm.SNH.p1.tbl <- bugs.tibl %>% 
+  dplyr::filter(time == 'pm', transect=='oakMargin', week < 26) %>%
+  dplyr::select(Thomisidae..crab.spider.)
+raw.spiders.pm.SNH.p1.tbl <- tibble::rowid_to_column(raw.spiders.pm.SNH.p1.tbl, "ID")
+
+raw.spiders.pm.control.p1.tbl <- bugs.tibl %>% 
+  dplyr::filter(time == 'pm', transect=='control', week < 26) %>%
+  dplyr::select(Thomisidae..crab.spider.)
+raw.spiders.pm.control.p1.tbl <- tibble::rowid_to_column(raw.spiders.pm.control.p1.tbl, "ID")
+
+	# raw.spiders.pm.SNH.p1.tbl %>% count(Thomisidae..crab.spider. == 0)
+	# TRUE 186
+  # raw.spiders.pm.SNH.p1.tbl %>% count(Thomisidae..crab.spider. == 1) 
+	# TRUE 57
+  # raw.spiders.pm.SNH.p1.tbl %>% count(Thomisidae..crab.spider. > 1) 
+  # TRUE 27
+
+	# raw.spiders.pm.control.p1.tbl %>% count(Thomisidae..crab.spider. == 0)
+	# TRUE 169
+  # raw.spiders.pm.control.p1.tbl %>% count(Thomisidae..crab.spider. == 1)
+	# TRUE 63
+	# raw.spiders.pm.control.p1.tbl %>% count(Thomisidae..crab.spider. > 1)
+  # TRUE 38
+
+	gg <- ggplot(data=raw.spiders.pm.control.p1.tbl) +
+
+  			geom_point(aes(y=Thomisidae..crab.spider., x=ID), fill = '#66a182', alpha=0.8) +
+  			theme_bw() +
+  			scale_x_continuous(limits=c(0, 270), breaks=c(seq(from=0, to=270, by=27))) +
+  			labs(	x = "observation number",
+         		 	y = paste( "count", sep=""), 
+ 					    title = paste("raw spider counts; control trial\n",
+ 					                  "169 observations = 0\n",
+ 					                  "63 observations = 1\n",
+ 					                  "38 observations > 1", sep=""))
+	
+	print(gg)
+
+
+	
+	gg <- ggplot(data=raw.spiders.pm.SNH.p1.tbl) +
+
+  			geom_point(aes(y=Thomisidae..crab.spider., x=ID), fill = '#66a182', alpha=0.8) +
+  			theme_bw() +
+  			scale_x_continuous(limits=c(0, 270), breaks=c(seq(from=0, to=270, by=27))) +
+  			labs(	x = "observation number",
+         		 	y = paste( "count", sep=""), 
+ 					    title = paste("raw spider counts; SNH trial\n",
+ 					                  "186 observations = 0\n",
+ 					                  "57 observations = 1\n",
+ 					                  "27 observations > 1", sep=""))
+	
+	print(gg)
+
+
+```
+
+
+**(b) the research question:** are these two count populations different?
+
+* can I use the characteristics of a calculated posterior distribution to compare the two populations?
+
+* how much bayesian 'evidence' is necessary for credibility of a bayesian posterior distribution? (This is similar to questions about sample size in classical analysis.)
+
+* is the following analytical approach valid?
+
+  * convert these counts to a binomial sequence
+  * define a 31 observation 'prior' for each trial (base::sample() the 270 observations)
+  * create 90 evidence-buckets for each trial by chopping the actual trial data into sequentially increasing multiples of 3 observations (evidence-bucket 1 has 3 observations, evidence-bucket 2 has 6 observations, ....)
+  * calculate the Bernoulli distribution of each of the 90 posteriors (for SNH and control) per https://bookdown.org/content/3686/inferring-a-binomial-probability-via-exact-mathematical-analysis.html#specifying-a-beta-prior
+  * calculate and compare the modes for each of the 90 SNH:control posterior pairs. The mode (theta), or maximum likelihood estimate, is the true proportion of traps that are expected to capture a spider.
+
+**(c) the issue I am having:** the variation of the posterior distributions makes me think that, at minimum, to compare two populations, the number of observations should at least match. (yuck! this is bad for comparing different timeframes or the work from another investigator.) Does the mode provide any utility in terms of comparison of the two populations?
+
 
 
 ```{r binomial, echo=FALSE, include=TRUE, results='asis', message=F, warning=T, out.width=c('50%', '50%'), fig.show='hold' }
@@ -190,3 +269,6 @@ ggsave(fileName, plot = gg, device = NULL, path = output.path,
 
 ```
 
+
+
+more binomial probability reading : https://willhipson.netlify.app/post/bayesian_intro/binomial_gold/ 
